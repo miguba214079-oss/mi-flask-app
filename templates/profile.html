@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   {% extends 'base.html' %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-3">Perfil de {{ user.username }}</h2>
+
+<div class="mb-4">
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Publicaciones:</strong> {{ user.posts|length }}</p>
+</div>
+
+<h4>Insignias ganadas</h4>
+
+{% if badges %}
+<div class="d-flex flex-wrap mb-3">
+    {% for badge in badges %}
+    <div class="badge-card {{ badge.category }} text-center m-2 p-3 border rounded shadow-sm" style="width: 150px; color: rgb(0, 0, 0);">
+        {% if badge.name == 'El Bibliotecario' %}<span class="fs-1">📚</span>
+        {% elif badge.name == 'Autor Estrella' %}<span class="fs-1">✍️</span>
+        {% elif badge.name == 'Crítico Literario' %}<span class="fs-1">📖</span>
+        {% elif badge.name == 'Redactor Magistral' %}<span class="fs-1">🖋️</span>
+        {% elif badge.name == 'Premio Literario' %}<span class="fs-1">🏆</span>
+        {% elif badge.name == 'Observador Atento' %}<span class="fs-1">👀</span>
+        {% elif badge.name == 'Debatiente Escolar' %}<span class="fs-1">🗣️</span>
+        {% elif badge.name == 'Consejero Académico' %}<span class="fs-1">💡</span>
+        {% elif badge.name == 'Orador de Aula' %}<span class="fs-1">📣</span>
+        {% elif badge.name == 'Voz de la Comunidad' %}<span class="fs-1">🎤</span>
+        {% elif badge.name == 'Amistoso' %}<span class="fs-1">🤝</span>
+        {% elif badge.name == 'Creativo' %}<span class="fs-1">🎨</span>
+        {% else %}<span class="fs-1">🏅</span>
+        {% endif %}
+
+        <p class="mt-2 fw-bold">{{ badge.name }}</p>
+        <p class="text-muted small">{{ badge.category }}</p>
+        <p class="small">{{ badge.description }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>No has ganado insignias aún. ¡Participa más para obtenerlas!</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}" class="btn btn-outline-primary">Volver a Inicio</a>
+
+<style>
+.badge-card {
+    background: linear-gradient(135deg, #f0f8ff, #e0f7fa);
+    transition: transform 0.2s;
+}
+.badge-card:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Colores por categoría */
+.badge-card.Publicaciones { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
+.badge-card.Comentarios { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+.badge-card.AmistosO { background: linear-gradient(135deg, #e1f5fe, #b3e5fc); }
+.badge-card.Creatividad { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+</style>
+
+{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- Indica que el documento está hecho con HTML5 -->
+
+<html lang="en">
+<!-- El idioma del documento es inglés -->
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Permite caracteres especiales como acentos y ñ -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Hace que el sitio sea responsivo en móviles -->
+
+    <title>Document</title>
+    <!-- Título por defecto de la página -->
+</head>
+
+<body style="text-align: center;">
+    <!-- Alinea todo el contenido al centro -->
+
+    {% extends 'base.html' %}
+    <!-- Hereda la plantilla base, reutilizando navbar, estilos, scripts, etc. -->
+
+    {% block title %}Piedra, Papel o Tijera{% endblock %}
+    <!-- Cambia el título de la pestaña del navegador -->
+
+    {% block content %}
+    <!-- Inicio del contenido principal que se insertará en base.html -->
+
+<h2>Piedra, Papel o Tijera</h2>
+<!-- Título del juego -->
+
+<p>Juega contra la computadora. Elige tu jugada:</p>
+<!-- Explicación breve -->
+
+<div>
+    <!-- Contenedor de los botones del juego -->
+
+    <!-- Cada botón tiene una clase para estilo Bootstrap y un data-choice para identificar su jugada -->
+    <button class="btn btn-primary choice-btn me-2 mb-2" data-choice="piedra">✊ Piedra</button>
+    <button class="btn btn-primary choice-btn me-2 mb-2" data-choice="papel">✋ Papel</button>
+    <button class="btn btn-primary choice-btn mb-2" data-choice="tijera">✌️ Tijera</button>
+</div>
+
+<!-- Resultado del juego -->
+<p id="result" class="mt-3 text-primary fs-5 fw-semibold" 
+   style="background: rgba(255, 255, 255, 0.697);"></p>
+<!-- Aquí aparecerá el resultado: empate, ganaste o perdiste -->
+
+<script>
+/* ----------------------------- VARIABLES ------------------------------ */
+
+// Opciones posibles del juego
+const choices = ['piedra', 'papel', 'tijera'];
+
+// Elemento donde se mostrará el resultado
+const resultEl = document.getElementById('result');
+
+// Selecciona todos los botones de elección del jugador
+document.querySelectorAll('.choice-btn').forEach(btn => {
+
+    // Evento al hacer clic en cualquiera de los botones
+    btn.addEventListener('click', () => {
+
+        const userChoice = btn.dataset.choice;
+        // Obtiene la jugada que eligió el usuario desde data-choice
+
+        const computerChoice = choices[Math.floor(Math.random() * 3)];
+        // La computadora elige una jugada aleatoria
+
+        let resultText = `Computadora eligió ${computerChoice}. `;
+        // Texto inicial avisando qué jugó la computadora
+
+        // ---------------------- LÓGICA DEL JUEGO ------------------------
+
+        if (userChoice === computerChoice) {
+            // Si ambas jugadas son iguales → empate
+            resultText += 'Es un empate.';
+
+        } else if (
+            // Posibles casos en los que el usuario gana
+            (userChoice === 'piedra' && computerChoice === 'tijera') ||
+            (userChoice === 'papel' && computerChoice === 'piedra') ||
+            (userChoice === 'tijera' && computerChoice === 'papel')
+        ) {
+            resultText += '¡Ganaste!';
+        } else {
+            // Todos los demás casos → pierde el usuario
+            resultText += 'Perdiste.';
+        }
+
+        // Muestra el resultado en pantalla
+        resultEl.textContent = resultText;
+    });
+});
+</script>
+
+<!-- Botón para regresar a la página de juegos -->
+<a href="{{ url_for('games') }}" class="btn btn-outline-primary mt-3">Volver a Juegos</a>
+
+{% endblock %}
+<!-- Fin del contenido -->
+
+</body>
+</html>

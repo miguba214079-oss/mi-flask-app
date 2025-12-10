@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- templates/new_post.html -->
+
+{% extends 'base.html' %}
+<!-- Hereda base.html para mantener navbar, estilos y estructura general -->
+
+{% block title %}Nueva publicación{% endblock %}
+<!-- Define el título que aparecerá en la pestaña del navegador -->
+
+{% block content %}
+<!-- Inicio del bloque de contenido principal -->
+
+<h2 class="mb-3">Crear nueva publicación</h2>
+<!-- Título de la sección con margen inferior -->
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+<!-- Formulario que envía datos mediante POST al servidor
+     enctype="multipart/form-data" permite subir archivos
+     novalidate evita que el navegador haga validación automática -->
+
+    <div class="mb-3">
+        <label for="content" class="form-label">Contenido</label>
+        <!-- Etiqueta para el área de texto -->
+        <textarea class="form-control" id="content" name="content" rows="4" placeholder="Comparte texto..."></textarea>
+        <!-- Campo de texto grande para escribir la publicación -->
+    </div>
+
+    <div class="mb-3">
+        <label for="media" class="form-label">Subir imagen, video o audio</label>
+        <!-- Etiqueta para subir archivos multimedia -->
+        <input class="form-control" type="file" id="media" name="media" accept="image/*,video/mp4,audio/*" />
+        <!-- Input de tipo file que acepta imágenes, videos mp4 o audios -->
+    </div>
+
+    <button type="submit" class="btn btn-primary">Publicar</button>
+    <!-- Botón para enviar el formulario -->
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+    <!-- Botón para cancelar y volver al inicio -->
+</form>
+
+{% endblock %}
+<!-- Fin del bloque de contenido -->
+
+</body>
+</html>

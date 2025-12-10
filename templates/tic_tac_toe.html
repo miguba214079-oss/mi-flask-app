@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!-- Indica que el documento está escrito en HTML5 -->
+
+<html lang="en">
+<!-- El idioma principal del documento es inglés -->
+
+<head>
+  <meta charset="UTF-8">
+  <!-- Permite usar acentos y caracteres especiales -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Ajuste responsivo para móviles -->
+
+  <title>Tic Tac Toe</title>
+  <!-- Título por defecto (aunque será sustituido por el bloque title) -->
+</head>
+
+<body style="text-align: center; color: rgb(255, 255, 255);">
+  <!-- Estilo general centrado y texto blanco -->
+
+  {% extends 'base.html' %}
+  <!-- Indica que esta página usa como plantilla base el archivo base.html -->
+
+  {% block title %}Tic Tac Toe{% endblock %}
+  <!-- Cambia el título de la pestaña a "Tic Tac Toe" -->
+
+  {% block content %}
+  <!-- Inicio del bloque principal que será insertado dentro de base.html -->
+
+  <h2>Tic Tac Toe</h2>
+  <!-- Título del juego -->
+
+  <p>Juega contra otro jugador. Haz clic para poner tu marca.</p>
+  <!-- Texto explicativo -->
+
+  <div id="game" class="d-flex flex-wrap mx-auto" style="max-width: 320px; margin-bottom: 20px;">
+    <!-- Contenedor del tablero: display flex, se ajusta en varias filas, centrado -->
+
+    {% for i in range(9) %}
+    <!-- Genera 9 casillas (0 a 8) -->
+
+    <div class="border border-primary d-flex align-items-center justify-content-center"
+         style="width: 100px; height: 100px; font-size: 3rem; cursor: pointer; background: rgba(34, 215, 228, 0.81);"
+         data-pos="{{ i }}">
+         <!-- Cada casilla es un cuadro 100x100. 
+              "data-pos" almacena la posición para identificarla en el JS -->
+    </div>
+
+    {% endfor %}
+  </div>
+
+  <!-- Estado del juego -->
+  <p id="status" class="fs-5 fw-semibold text-center" style="color:white;"></p>
+  <!-- Aquí se muestra el turno, ganador o empate -->
+
+  <button id="resetBtn" class="btn btn-primary d-block mx-auto mt-3 px-4 fw-bold">Reiniciar Juego</button>
+  <!-- Botón que reinicia el juego -->
+
+<script>
+/* ------------------------ VARIABLES PRINCIPALES ------------------------- */
+
+// Tablero en memoria: 9 posiciones, todas vacías al inicio
+const board = Array(9).fill(null);
+
+// Empieza jugador X
+let turn = 'X';
+
+// Selecciona todas las casillas del tablero
+const gameDivs = document.querySelectorAll('#game > div');
+
+// Elemento donde se muestra el texto del estado
+const statusEl = document.getElementById('status');
+
+// Combinaciones que representan las líneas ganadoras del juego
+const winningCombos = [
+  [0,1,2], [3,4,5], [6,7,8], // Horizontales
+  [0,3,6], [1,4,7], [2,5,8], // Verticales
+  [0,4,8], [2,4,6]           // Diagonales
+];
+
+/* ----------------------- FUNCIÓN PARA DETECTAR GANADOR ----------------------- */
+function checkWinner() {
+  for (const combo of winningCombos) {
+    const [a,b,c] = combo;
+
+    // Si las posiciones no están vacías y son iguales → hay ganador
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) 
+      return board[a];
+  }
+
+  // Si todas las casillas están llenas y no hubo ganador → empate
+  if (board.every(cell => cell)) return 'Draw';
+
+  // Si no hay ganador ni empate → continuar
+  return null;
+}
+
+/* -------------------------- ACTUALIZAR MENSAJE --------------------------- */
+function updateStatus() {
+  const winner = checkWinner();
+  
+  if (winner && winner !== 'Draw') {
+    // Si hay ganador
+    statusEl.textContent = `¡Jugador ${winner} ganó!`;
+  
+  } else if (winner === 'Draw') {
+    // Si hay empate
+    statusEl.textContent = '¡Empate!';
+  
+  } else {
+    // Si el juego sigue
+    statusEl.textContent = `Turno de ${turn}`;
+  }
+}
+
+/* ------------------------------ REINICIAR ------------------------------- */
+function resetGame() {
+  board.fill(null); // Vacía el tablero
+  gameDivs.forEach(div => (div.textContent = '')); // Limpia el texto de las casillas
+  turn = 'X'; // Vuelve a iniciar en X
+  updateStatus(); // Actualiza mensaje
+}
+
+/* ----------------------------- EVENTO CLIC ------------------------------- */
+gameDivs.forEach(div => {
+  div.addEventListener('click', () => {
+    const pos = parseInt(div.dataset.pos); // Obtiene la posición de la casilla
+
+    // Si ya está ocupada o si el juego terminó → no hacer nada
+    if (board[pos] || checkWinner()) return;
+
+    // Marca la casilla con el turno actual
+    board[pos] = turn;
+    div.textContent = turn;
+
+    // Cambia el turno solo si no hay ganador aún
+    if (!checkWinner()) {
+      turn = turn === 'X' ? 'O' : 'X';
+    }
+
+    updateStatus(); // Actualiza mensaje
+  });
+});
+
+/* ----------------------- BOTÓN DE REINICIAR ----------------------------- */
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+/* ----------------------- INICIALIZA EL ESTADO --------------------------- */
+updateStatus();
+
+</script>
+
+<!-- Botón para regresar a la página de juegos -->
+<a href="{{ url_for('games') }}" class="btn btn-outline-primary mt-3 d-block mx-auto w-auto">
+  Volver a Juegos
+</a>
+
+{% endblock %}
+<!-- Fin del contenido insertado en base.html -->
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!-- Indica que este documento usa HTML5 -->
+
+<html lang="en">
+<!-- Define el idioma del documento -->
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Permite usar caracteres especiales como tildes, emojis, etc. -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Hace que la página sea responsiva en dispositivos móviles -->
+
+    <title>Document</title>
+    <!-- Título por defecto (luego será reemplazado por el bloque title) -->
+</head>
+
+<body>
+
+    {% extends 'base.html' %}
+    <!-- La plantilla hereda el diseño, estilos y navbar de base.html -->
+
+    {% block title %}Juego de Memoria{% endblock %}
+    <!-- Título que aparece en la pestaña del navegador -->
+
+    {% block content %}
+    <!-- Aquí empieza el contenido principal -->
+
+<h2 class="mb-3 text-center">Juego de Memoria</h2>
+<!-- Título centrado con margen inferior -->
+
+<p class="text-center">
+    Encuentra los pares de cartas iguales. Haz clic para voltear las cartas.
+</p>
+<!-- Texto que explica cómo jugar -->
+
+<!-- Tablero responsivo: usa Bootstrap para que las cartas se acomoden solas -->
+<div id="gameBoard" class="row row-cols-2 row-cols-sm-4 g-3 justify-content-center"></div>
+
+<!-- Mensaje del estado del juego (ganaste, sigue jugando, etc.) -->
+<p id="message" class="mt-3 text-center fs-5 fw-semibold"></p>
+
+<!-- Botón para reiniciar -->
+<div class="text-center">
+    <button id="restartBtn" class="btn btn-warning mt-3 px-4 fw-bold">
+        Reiniciar Juego
+    </button>
+</div>
+
+<script>
+/* -------------------------------------------------------------------------
+   VARIABLES DEL JUEGO
+   ------------------------------------------------------------------------- */
+
+// Arreglo de emojis: cada carta aparece dos veces
+const cardsArray = ['🍎','🍌','🍇','🍉','🍎','🍌','🍇','🍉'];
+
+// Arreglo donde se guardará la baraja mezclada
+let shuffledCards = [];
+
+// Variables para controlar el primer y segundo clic del jugador
+let firstCard = null;
+let secondCard = null;
+
+// Evita que se pueda hacer clic mientras se verifican dos cartas
+let lockBoard = false;
+
+// Contador de pares encontrados
+let matches = 0;
+
+// Elementos del DOM
+const gameBoard = document.getElementById('gameBoard');
+const message = document.getElementById('message');
+const restartBtn = document.getElementById('restartBtn');
+
+
+/* -------------------------------------------------------------------------
+   FUNCIÓN PARA MEZCLAR CARTAS (Fisher–Yates shuffle)
+   ------------------------------------------------------------------------- */
+function shuffle(array) {
+    let currentIndex = array.length, temporaryValue, randomIndex;
+
+    while (currentIndex !== 0) {
+        // Escoge un índice aleatorio
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // Intercambia valores
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+    return array;
+}
+
+
+/* -------------------------------------------------------------------------
+   FUNCION PARA CREAR EL TABLERO
+   ------------------------------------------------------------------------- */
+function createBoard() {
+    gameBoard.innerHTML = ''; // Limpia tablero anterior
+    shuffledCards = shuffle(cardsArray.slice()); // Crea copia mezclada
+    matches = 0; // Reinicia contador
+    message.textContent = ''; // Limpia mensaje
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+
+    // Crea una carta visual por cada emoji
+    shuffledCards.forEach((emoji, index) => {
+        const card = document.createElement('div');
+
+        // Clases visuales de Bootstrap
+        card.classList.add('card', 'text-center', 'shadow-sm', 'p-4', 'rounded', 'bg-gradient');
+        card.style.cursor = 'pointer';
+        card.style.fontSize = '3rem';
+
+        // Guarda información en atributos
+        card.dataset.emoji = emoji; 
+        card.dataset.index = index;
+
+        // El contenido inicial es un signo de pregunta
+        card.textContent = '❓';
+
+        // Evento cuando el jugador hace clic
+        card.addEventListener('click', flipCard);
+
+        // Agrega la carta al tablero
+        gameBoard.appendChild(card);
+    });
+}
+
+
+/* -------------------------------------------------------------------------
+   LÓGICA PRINCIPAL: VOLTEAR CARTAS
+   ------------------------------------------------------------------------- */
+function flipCard(e) {
+    if (lockBoard) return; // Evita doble clic si hay dos cartas abiertas
+
+    const clickedCard = e.currentTarget;
+
+    if (clickedCard === firstCard) return; // No permite seleccionar dos veces la misma carta
+
+    // Muestra el emoji (voltea la carta)
+    clickedCard.textContent = clickedCard.dataset.emoji;
+
+    // Si no hay primera carta todavía, esta es la primera
+    if (!firstCard) {
+        firstCard = clickedCard;
+        return;
+    }
+
+    // Segunda carta seleccionada
+    secondCard = clickedCard;
+    lockBoard = true;
+
+    // Si los emojis coinciden → par encontrado
+    if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+        matches++;
+
+        // Colorea ambas cartas de verde para indicar acierto
+        firstCard.style.background = '#28a745';
+        firstCard.style.color = 'white';
+        secondCard.style.background = '#28a745';
+        secondCard.style.color = 'white';
+
+        resetTurn();
+
+        // Si encontraste todos los pares → ganaste
+        if (matches === cardsArray.length / 2) {
+            message.textContent = '¡Felicidades! Has encontrado todos los pares 🎉';
+            message.style.color = '#ffc107';
+        }
+
+    } else {
+        // Si NO coinciden → se voltean después de 1 segundo
+        setTimeout(() => {
+            firstCard.textContent = '❓';
+            secondCard.textContent = '❓';
+
+            firstCard.style.background = '';
+            secondCard.style.background = '';
+            firstCard.style.color = '';
+            secondCard.style.color = '';
+
+            resetTurn();
+        }, 1000);
+    }
+}
+
+
+/* -------------------------------------------------------------------------
+   REINICIA LA SELECCIÓN DE CARTAS
+   ------------------------------------------------------------------------- */
+function resetTurn() {
+    [firstCard, secondCard] = [null, null]; // Limpia variables
+    lockBoard = false; // Libera el tablero
+}
+
+
+/* -------------------------------------------------------------------------
+   EVENTO PARA REINICIAR JUEGO
+   ------------------------------------------------------------------------- */
+restartBtn.addEventListener('click', createBoard);
+
+
+/* -------------------------------------------------------------------------
+   INICIALIZA EL JUEGO CUANDO CARGA LA PÁGINA
+   ------------------------------------------------------------------------- */
+createBoard();
+</script>
+
+<style>
+  /* Fondo degradado pastel para las cartas */
+  .bg-gradient {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    transition: background-color 0.3s ease;
+  }
+
+  /* Efecto al pasar el mouse */
+  .bg-gradient:hover {
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  }
+</style>
+
+<!-- Botón para regresar al menú de juegos -->
+<a href="{{ url_for('games') }}" class="btn btn-outline-warning mt-4 d-block mx-auto w-auto">
+    Volver a Juegos
+</a>
+
+{% endblock %}
+<!-- Fin del bloque de contenido -->
+
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!-- Define que el documento usa la versión HTML5 -->
+
+<html lang="en">
+<!-- Idioma principal del documento -->
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Permite caracteres como tildes, ñ, emojis, etc. -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Hace que el diseño sea responsivo en móviles -->
+
+    <title>Document</title>
+    <!-- Título por defecto (pero será sobrescrito con Jinja) -->
+</head>
+
+<body>
+<!-- templates/index.html -->
+<!-- Este archivo representa la página principal del sitio -->
+
+{% extends 'base.html' %}
+<!-- Esta plantilla hereda estructura, navbar y estilos de base.html -->
+
+{% block title %}Inicio{% endblock %}
+<!-- Define el título de la pestaña del navegador -->
+
+{% block content %}
+<!-- Inicio del contenido principal que se mostrará dentro de base.html -->
+
+<h2>Bienvenido, {{ user.username }}</h2>
+<!-- Muestra el nombre de usuario del que inició sesión -->
+
+<a href="{{ url_for('new_post') }}" class="btn btn-primary mb-3">
+    Nueva publicación
+</a>
+<!-- Botón para crear nueva publicación -->
+
+{% for post in posts %}
+<!-- Itera sobre todas las publicaciones enviadas desde Flask -->
+
+<div class="card mb-4">
+    <!-- Cada publicación es una tarjeta Bootstrap -->
+
+    <div class="card-body">
+        <!-- Contenido del post -->
+
+        <p>{{ post.content }}</p>
+        <!-- Texto de la publicación -->
+
+        {% if post.media_url %}
+        <!-- Si la publicación contiene un archivo multimedia -->
+
+            {% if post.media_type == 'image' %}
+            <!-- Si es una imagen -->
+
+                <img src="{{ post.media_url }}" alt="Media" style="max-width: 400px;">
+
+            {% elif post.media_type == 'video' %}
+            <!-- Si es un video -->
+
+                <video controls width="400">
+                    <source src="{{ post.media_url }}" type="video/mp4">
+                    Tu navegador no soporta video HTML5.
+                </video>
+
+            {% elif post.media_type == 'audio' %}
+            <!-- Si es audio -->
+
+                <audio controls>
+                    <source src="{{ post.media_url }}" type="audio/mpeg">
+                    Tu navegador no soporta audio HTML5.
+                </audio>
+
+            {% endif %}
+        {% endif %}
+
+        <small class="text-muted" 
+               style="background: rgba(255, 255, 255, 0.762);">
+            Publicado por {{ post.author.username }}
+            el {{ post.timestamp.strftime('%d/%m/%Y %H:%M') }}
+        </small>
+        <!-- Muestra autor y fecha, formateada -->
+
+        {% if user.id == post.user_id %}
+        <!-- Si el post pertenece al usuario actual, mostrar opciones -->
+
+            <div class="mt-2">
+                <a href="{{ url_for('edit_post', post_id=post.id) }}"
+                   class="btn btn-sm btn-outline-primary">
+                    Editar
+                </a>
+
+                <form action="{{ url_for('delete_post', post_id=post.id) }}"
+                      method="POST" style="display:inline;">
+                    <!-- Formulario para eliminar publicación -->
+
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('¿Eliminar esta publicación?');">
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+
+        {% endif %}
+
+        <!-- ====================== REACCIONES ========================== -->
+
+        <div class="mt-3">
+            <strong>Reacciones:</strong>
+
+            <span id="reactions-count-{{ post.id }}">
+                <!-- Aquí se muestran las reacciones contadas -->
+
+                {% set reaction_counts = {} %}
+                <!-- Diccionario temporal para contar emojis -->
+
+                {% for reaction in post.reactions %}
+                    <!-- Itera cada reacción del post -->
+
+                    {% set reaction_counts = 
+                        reaction_counts.update({
+                            reaction.emoji: (reaction_counts.get(reaction.emoji, 0) + 1)
+                        }) 
+                        or reaction_counts %}
+                    <!-- Suma 1 al emoji correspondiente -->
+                {% endfor %}
+
+                {% for emoji, count in reaction_counts.items() %}
+                    <!-- Muestra cada emoji con su número -->
+
+                    {{ emoji }} {{ count }}&nbsp;
+                {% endfor %}
+            </span>
+        </div>
+
+        <!-- Botones de reacción -->
+        <div class="mt-2">
+            {% for emoji in ['👍', '❤️', '😂', '😮', '😢', '👎'] %}
+                <button class="btn btn-sm btn-outline-secondary reaction-btn"
+                        data-post-id="{{ post.id }}"
+                        data-emoji="{{ emoji }}">
+                    {{ emoji }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <!-- ====================== COMENTARIOS ========================== -->
+
+        <div class="mt-3">
+            <strong>Comentarios:</strong>
+
+            <ul class="list-unstyled">
+                {% for comment in post.comments %}
+                <!-- Listado de comentarios -->
+
+                    <li>
+                        <small>
+                            <strong>{{ comment.user.username }}</strong> dijo:
+                        </small>
+
+                        <p>{{ comment.content }}</p>
+                        <!-- Texto del comentario -->
+
+                        <small class="text-muted" 
+                               style="background: rgba(255, 255, 255, 0.762);">
+                               {{ comment.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                        </small>
+                    </li>
+
+                {% else %}
+                <!-- Si no hay comentarios -->
+
+                    <li><em>No hay comentarios aún.</em></li>
+
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Formulario para agregar un nuevo comentario -->
+        <form action="{{ url_for('new_comment') }}" method="POST" class="mt-3">
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+            <!-- Para saber a qué publicación pertenece el comentario -->
+
+            <div class="input-group">
+                <input type="text" name="content" class="form-control"
+                       placeholder="Escribe un comentario..." required>
+
+                <button class="btn btn-primary" type="submit">Comentar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<!-- Si no hay posts -->
+
+<p>No hay publicaciones aún.</p>
+
+{% endfor %}
+
+<!-- ====================== JS PARA LAS REACCIONES ========================== -->
+
+<script>
+document.querySelectorAll('.reaction-btn').forEach(button => {
+    // Selecciona todos los botones de reacción
+
+    button.addEventListener('click', () => {
+        // Evento clic para cada botón
+
+        const postId = button.getAttribute('data-post-id');
+        // Obtiene el ID del post
+
+        const emoji = button.getAttribute('data-emoji');
+        // Obtiene qué emoji se presionó
+
+        fetch('{{ url_for("reaction") }}', {
+            // Envía petición al backend Flask
+
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ post_id: postId, emoji: emoji })
+            // Manda JSON con la info necesaria para registrar la reacción
+        })
+        .then(response => response.json())
+        // Convierte la respuesta a JSON
+
+        .then(data => {
+            // Maneja la respuesta del servidor
+
+            if (data.counts) {
+                // Si devuelve los conteos actualizados
+
+                let countsHtml = '';
+
+                for (const [e, c] of Object.entries(data.counts)) {
+                    // Recorre emojis y sus conteos
+                    countsHtml += `${e} ${c} &nbsp;`;
+                }
+
+                document.getElementById('reactions-count-' + postId)
+                        .innerHTML = countsHtml;
+                // Actualiza lo que se muestra en la página
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}
+<!-- Cierra el bloque de contenido principal -->
+
+</body>
+</html>

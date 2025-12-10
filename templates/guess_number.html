@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!-- Indica que este documento usa HTML5 -->
+
+<html lang="en">
+<!-- El idioma del documento está configurado como inglés -->
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Permite usar caracteres especiales: tildes, ñ, etc. -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Optimiza la visualización en dispositivos móviles -->
+
+    <title>Document</title>
+    <!-- Título por defecto (aunque será reemplazado por el bloque title) -->
+</head>
+
+<body>
+    {% extends 'base.html' %}
+    <!-- Esta plantilla hereda de base.html para reutilizar su estructura -->
+
+    {% block title %}Adivina el Número{% endblock %}
+    <!-- Cambia el título de la pestaña del navegador -->
+
+    {% block content %}
+    <!-- Inicio del contenido que se incrustará dentro del layout base -->
+
+<div class="d-flex flex-column align-items-center">
+    <!-- Contenedor vertical y centrado -->
+
+    <h2 class="mb-3 text-center">Adivina el Número</h2>
+    <!-- Título principal del juego -->
+
+    <p class="text-center">
+      Elige un número entre 1 y 100. ¡Tienes que adivinarlo!
+    </p>
+    <!-- Indicaciones al usuario -->
+
+    <div class="mb-3 w-75 w-sm-50 w-md-25">
+        <!-- Contenedor del input adaptativo según tamaño de pantalla -->
+
+        <input type="number" id="guessInput" 
+               class="form-control form-control-lg"
+               placeholder="Tu número" min="1" max="100" />
+        <!-- Caja donde el usuario escribe su número -->
+    </div>
+
+    <button id="guessBtn" 
+            class="btn btn-success btn-lg mb-3 px-5 fw-semibold">
+        Adivinar
+    </button>
+    <!-- Botón para enviar la respuesta -->
+
+    <p id="resultMsg" class="fs-5 fw-semibold text-center"></p>
+    <!-- Mensaje de resultado: acierto, más bajo, más alto -->
+
+    <p id="attempts" class="fs-6 text-center">Intentos: 0</p>
+    <!-- Contador de intentos -->
+</div>
+
+<script>
+/* --------------------------- VARIABLES DEL JUEGO ---------------------------- */
+
+const secretNumber = Math.floor(Math.random() * 100) + 1;
+// Genera un número aleatorio entre 1 y 100
+
+let attempts = 0;
+// Contador de intentos del jugador
+
+/* -------------------------- EVENTO DEL BOTÓN -------------------------------- */
+
+document.getElementById('guessBtn').addEventListener('click', () => {
+
+    const guessInput = document.getElementById('guessInput');
+    // Obtiene el campo del número ingresado
+
+    const guess = Number(guessInput.value);
+    // Convierte el valor ingresado a número
+
+    const resultMsg = document.getElementById('resultMsg');
+    // Elemento donde se mostrará el mensaje de resultado
+
+    const attemptsEl = document.getElementById('attempts');
+    // Elemento donde se muestra el número de intentos
+
+    /* -------------------------- VALIDACIÓN DEL INPUT --------------------------- */
+
+    if (!guess || guess < 1 || guess > 100) {
+        // Si no ingresó un número válido...
+
+        resultMsg.textContent = 'Por favor, ingresa un número válido entre 1 y 100.';
+        resultMsg.style.color = 'red'; // Mensaje en rojo
+        return;
+    }
+
+    attempts++; // Aumenta los intentos
+
+    /* -------------------------- LÓGICA DEL JUEGO ------------------------------ */
+
+    if (guess === secretNumber) {
+        // Si acertó el número
+
+        resultMsg.textContent = 
+          `¡Correcto! El número era ${secretNumber}. Lo lograste en ${attempts} intento(s). 🎉`;
+
+        resultMsg.style.color = '#28a745'; // Verde éxito
+        attemptsEl.textContent = `Intentos: ${attempts}`;
+
+        document.getElementById('guessBtn').disabled = true;
+        // Deshabilita el botón después de ganar
+
+    } else if (guess < secretNumber) {
+        // Si es demasiado bajo
+
+        resultMsg.textContent = 'Demasiado bajo. Intenta un número más alto.';
+        resultMsg.style.color = '#fd7e14'; // Naranja
+        attemptsEl.textContent = `Intentos: ${attempts}`;
+
+    } else {
+        // Si es demasiado alto
+
+        resultMsg.textContent = 'Demasiado alto. Intenta un número más bajo.';
+        resultMsg.style.color = '#fd7e14';
+        attemptsEl.textContent = `Intentos: ${attempts}`;
+    }
+});
+</script>
+
+<!-- Botón para volver al menú de juegos -->
+<a href="{{ url_for('games') }}" class="btn btn-outline-warning mt-4">
+  Volver a Juegos
+</a>
+
+{% endblock %}
+<!-- Fin del contenido -->
+</body>
+</html>

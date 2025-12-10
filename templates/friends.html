@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Document</title>
+
+</head>
+
+<body>
+
+
+
+{% extends 'base.html' %}
+
+{% block title %}Amigos y Mensajes{% endblock %}
+
+{% block content %}
+
+
+
+<h2 class="mb-4 text-center">Usuarios y Amigos </h2>
+
+
+
+<div class="row gx-3 gy-4">
+
+
+
+  <div class="col-12 col-md-4">
+
+    <div class="card h-100 p-3">
+
+      <h4>Personas en la aplicación</h4>
+
+      <ul class="list-group overflow-auto" style="max-height: 400px;">
+
+        {% for user in users %}
+
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+          {{ user.username }}
+
+          {% if user in friends %}
+
+            <span class="badge bg-success me-2">Amigo</span>
+
+            <button class="btn btn-sm btn-outline-danger remove-friend-btn" data-friend-id="{{ user.id }}">Eliminar</button>
+
+          {% else %}
+
+            <button class="btn btn-sm btn-primary send-request-btn" data-user-id="{{ user.id }}">Enviar solicitud</button>
+
+          {% endif %}
+
+        </li>
+
+        {% else %}
+
+        <li class="list-group-item">No hay usuarios disponibles</li>
+
+        {% endfor %}
+
+      </ul>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="col-12 col-md-4">
+
+    <div class="card h-100 p-3">
+
+      <h4>Solicitudes recibidas</h4>
+
+      <ul class="list-group overflow-auto" style="max-height: 400px;">
+
+        {% for request in friend_requests %}
+
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+          {{ request.from_user.username }}
+
+          <div>
+
+            <button class="btn btn-sm btn-success accept-request-btn" data-request-id="{{ request.id }}">Aceptar</button>
+
+            <button class="btn btn-sm btn-danger decline-request-btn" data-request-id="{{ request.id }}">Rechazar</button>
+
+          </div>
+
+        </li>
+
+        {% else %}
+
+        <li class="list-group-item">No hay solicitudes pendientes</li>
+
+        {% endfor %}
+
+      </ul>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="col-12 col-md-4 d-flex flex-column">
+
+    <div class="card p-3 flex-grow-1 d-flex flex-column">
+
+      <h4>Amigos</h4>
+
+      <ul class="list-group flex-grow-1 overflow-auto" style="max-height: 250px;">
+
+        {% for friend in friends %}
+
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+          {{ friend.username }}
+
+          <button class="btn btn-sm btn-outline-primary message-btn" data-friend-id="{{ friend.id }}" data-friend-name="{{ friend.username }}">Mensaje</button>
+
+        </li>
+
+        {% else %}
+
+        <li class="list-group-item">Aún no tienes amigos</li>
+
+        {% endfor %}
+
+      </ul>
+
+
+
+      <div id="chatPanel" class="mt-3 d-none flex-column flex-grow-1">
+
+        <h5>Chat con <span id="chatFriendName"></span></h5>
+
+        <div id="chatMessages" class="border rounded p-2 mb-2 flex-grow-1" style="overflow-y: auto; background: rgba(140, 158, 152, 0.85); color: #f0f0f0;"></div>
+
+        <form id="messageForm" class="d-flex flex-column gap-2" enctype="multipart/form-data">
+
+          <input type="text" id="messageInput" class="form-control" placeholder="Escribe aquí tu mensaje..." autocomplete="off" style="min-width: 300px;" />
+
+          <div class="d-flex gap-2">
+
+            <input type="file" id="fileInput" accept="audio/*,video/*,image/*" class="form-control" style="max-width: 70%;" />
+
+            <button type="submit" class="btn btn-primary flex-grow-1">Enviar</button>
+
+          </div>
+
+        </form>
+
+        <div id="textPreview" class="mt-2" style="color:#d1e7dd;font-style:italic;"></div>
+
+        <div id="previewArea" class="mt-2"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+</div>
+
+
+
+<script>
+
+  let currentChatFriendId = null;
+
+  let currentChatFriendName = "";
+
+
+
+  const chatFriendName = document.getElementById('chatFriendName');
+
+  const chatPanel = document.getElementById('chatPanel');
+
+  const chatMessages = document.getElementById('chatMessages');
+
+  const messageForm = document.getElementById('messageForm');
+
+  const messageInput = document.getElementById('messageInput');
+
+  const fileInput = document.getElementById('fileInput');
+
+  const previewArea = document.getElementById('previewArea');
+
+  const textPreview = document.getElementById('textPreview');
+
+
+
+  function openChat(friendId, friendName) {
+
+    currentChatFriendId = friendId;
+
+    currentChatFriendName = friendName;
+
+
+
+    chatFriendName.textContent = friendName;
+
+    chatPanel.classList.remove("d-none");
+
+
+
+    previewArea.innerHTML = "";
+
+    textPreview.textContent = "";
+
+    messageInput.value = "";
+
+    fileInput.value = "";
+
+
+
+    loadChatMessages(friendId);
+
+  }
+
+
+
+  function loadChatMessages(friendId) {
+
+    fetch(`/messages/${friendId}`)
+
+      .then(res => res.json())
+
+      .then(data => {
+
+        chatMessages.innerHTML = "";
+
+        data.messages.forEach(msg => {
+
+          const div = document.createElement("div");
+
+          div.style.marginBottom = "0.8rem";
+
+          let sender = msg.sender === "me" ? "Tú" : currentChatFriendName;
+
+          div.innerHTML = `<strong>${sender}:</strong> ${msg.content || ""}`;
+
+          if (msg.file_url) {
+
+            let ext = msg.file_url.split(".").pop().toLowerCase();
+
+            if (["mp3","wav","ogg"].includes(ext)) div.innerHTML += `<br><audio controls src="${msg.file_url}"></audio>`;
+
+            else if (["mp4","webm"].includes(ext)) div.innerHTML += `<br><video controls width="250" src="${msg.file_url}"></video>`;
+
+            else if (["jpg","jpeg","png","gif"].includes(ext)) div.innerHTML += `<br><img src="${msg.file_url}" style="max-width:250px;border-radius:5px;">`;
+
+          }
+
+          chatMessages.appendChild(div);
+
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      });
+
+  }
+
+
+
+  function showPreview(file) {
+
+    previewArea.innerHTML = "";
+
+    if (!file) return;
+
+    let url = URL.createObjectURL(file);
+
+    let ext = file.name.split(".").pop().toLowerCase();
+
+    let element = null;
+
+    if (["jpg","jpeg","png","gif"].includes(ext)) {
+
+      element = document.createElement("img"); element.src = url; element.style.maxWidth="250px";
+
+    }
+
+    else if (["mp3","wav","ogg"].includes(ext)) {
+
+      element = document.createElement("audio"); element.controls = true; element.src = url;
+
+    }
+
+    else if (["mp4","webm"].includes(ext)) {
+
+      element = document.createElement("video"); element.controls=true; element.width=250; element.src=url;
+
+    }
+
+    if (element) previewArea.appendChild(element);
+
+    else previewArea.textContent = "Archivo listo para enviar: " + file.name;
+
+  }
+
+
+
+  messageInput.addEventListener("input", () => {
+
+    let t = messageInput.value.trim();
+
+    textPreview.textContent = t ? "Vista previa: " + t : "";
+
+  });
+
+
+
+  fileInput.addEventListener("change", e => showPreview(e.target.files[0]));
+
+
+
+  messageForm.addEventListener("submit", e => {
+
+    e.preventDefault();
+
+    if (!messageInput.value.trim() && fileInput.files.length === 0) {
+
+      alert("Escribe algo o adjunta un archivo.");
+
+      return;
+
+    }
+
+    const form = new FormData();
+
+    form.append("content", messageInput.value);
+
+    if (fileInput.files.length) form.append("file", fileInput.files[0]);
+
+
+
+    fetch(`/messages/${currentChatFriendId}`, { method:"POST", body:form })
+
+      .then(res=>res.json())
+
+      .then(data=>{
+
+        if (data.success){
+
+          messageInput.value="";
+
+          textPreview.textContent="";
+
+          fileInput.value="";
+
+          previewArea.innerHTML="";
+
+          loadChatMessages(currentChatFriendId);
+
+        }
+
+      });
+
+  });
+
+
+
+  document.querySelectorAll(".send-request-btn").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      let id = btn.dataset.userId;
+
+      fetch("/friend-request/send", {
+
+        method:"POST",
+
+        headers:{"Content-Type":"application/json"},
+
+        body:JSON.stringify({to_user_id:id})
+
+      }).then(r=>r.json()).then(data=>{
+
+        if (data.success){ btn.disabled=true; btn.textContent="Solicitud enviada"; }
+
+      });
+
+    });
+
+  });
+
+
+
+  document.querySelectorAll(".accept-request-btn").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      fetch("/friend-request/accept", {
+
+        method:"POST",
+
+        headers:{"Content-Type":"application/json"},
+
+        body:JSON.stringify({request_id:btn.dataset.requestId})
+
+      }).then(r=>r.json()).then(data=>{ if(data.success) location.reload(); });
+
+    });
+
+  });
+
+
+
+  document.querySelectorAll(".decline-request-btn").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      fetch("/friend-request/decline", {
+
+        method:"POST",
+
+        headers:{"Content-Type":"application/json"},
+
+        body:JSON.stringify({request_id:btn.dataset.requestId})
+
+      }).then(r=>r.json()).then(data=>{ if(data.success) location.reload(); });
+
+    });
+
+  });
+
+
+
+  document.querySelectorAll(".remove-friend-btn").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      const friendId = btn.dataset.friendId;
+
+      if(!confirm("¿Eliminar a este amigo?")) return;
+
+
+
+      fetch("/friend/remove", {
+
+        method:"POST",
+
+        headers:{"Content-Type":"application/json"},
+
+        body:JSON.stringify({friend_id:friendId})
+
+      }).then(r=>r.json()).then(data=>{
+
+        if(data.success){
+
+          const li = btn.closest("li");
+
+          if(li.querySelector(".badge")) li.querySelector(".badge").remove();
+
+          btn.remove();
+
+
+
+          const newBtn = document.createElement("button");
+
+          newBtn.className = "btn btn-sm btn-primary send-request-btn";
+
+          newBtn.dataset.userId = friendId;
+
+          newBtn.textContent = "Enviar solicitud";
+
+          li.appendChild(newBtn);
+
+
+
+          newBtn.addEventListener("click", ()=>{
+
+            fetch("/friend-request/send", {
+
+              method:"POST",
+
+              headers:{"Content-Type":"application/json"},
+
+              body:JSON.stringify({to_user_id:friendId})
+
+            }).then(r=>r.json()).then(dt=>{
+
+              if(dt.success){ newBtn.disabled=true; newBtn.textContent="Solicitud enviada"; }
+
+            });
+
+          });
+
+        }
+
+      });
+
+    });
+
+  });
+
+
+
+  document.querySelectorAll(".message-btn").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>openChat(btn.dataset.friendId, btn.dataset.friendName));
+
+  });
+
+</script>
+
+
+
+{% endblock %}
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html> 
+<!-- Indica que el documento utiliza HTML5 -->
+
+<html lang="en"> 
+<!-- El idioma principal del documento es inglés -->
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Permite usar caracteres especiales como acentos y ñ -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Hace que la página sea responsiva en celulares -->
+
+    <title>Document</title>
+    <!-- Título por defecto (aunque será reemplazado por el bloque title) -->
+</head>
+
+<body>
+    {% extends 'base.html' %}  
+    <!-- Esta plantilla hereda la estructura de base.html -->
+
+    {% block title %}Juegos{% endblock %}  
+    <!-- Reemplaza el título de la pestaña con "Juegos" -->
+
+    {% block content %}
+    <!-- Inicio del contenido principal que será insertado en base.html -->
+
+    <h2>Juegos disponibles</h2>
+    <!-- Título de la página -->
+
+    <div class="list-group">  
+        <!-- Contenedor estilizado con Bootstrap para mostrar una lista interactiva -->
+
+        <h4>
+            Bienvenido a un espacio donde podras pasar buenos momentos 
+            y incluso hacer crecer tu creatividad
+        </h4>
+        <!-- Mensaje introductorio para los usuarios -->
+        
+        <a href="{{ url_for('tic_tac_toe') }}" class="list-group-item list-group-item-action">
+            Tres en Raya (Tic Tac Toe)
+        </a>
+        <!-- Enlace al juego de Tres en Raya -->
+
+        <a href="{{ url_for('rock_paper_scissors') }}" class="list-group-item list-group-item-action">
+            Piedra, Papel o Tijeras
+        </a>
+        <!-- Enlace al juego de Piedra, Papel o Tijeras -->
+
+        <a href="{{ url_for('memory') }}" class="list-group-item list-group-item-action">
+            Juego de Memoria
+        </a>
+        <!-- Enlace al juego de memoria -->
+
+        <a href="{{ url_for('guess_number') }}" class="list-group-item list-group-item-action">
+            Adivina el Número
+        </a>
+        <!-- Enlace al juego Adivina el Número -->
+    </div>
+
+    {% endblock %}
+    <!-- Fin del contenido que se inserta en base.html -->
+
+</body>
+</html>

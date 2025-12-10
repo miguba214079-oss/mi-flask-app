@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   <!-- templates/login.html -->
+
+{% extends 'base.html' %}
+<!-- Hereda base.html para mantener el navbar, estilos y estructura general -->
+
+{% block title %}Iniciar sesión{% endblock %}
+<!-- Define el título que aparecerá en la pestaña del navegador -->
+
+{% block content %}
+<!-- Inicio del bloque de contenido principal -->
+
+<form method="POST" novalidate style="text-align: center;">
+<!-- Formulario que envía los datos mediante POST al servidor.
+     novalidate evita validaciones automáticas del navegador.
+     style="text-align: center;" centra el formulario horizontalmente. -->
+
+    <h4>
+    ¡Bienvenido a la Red Social del CECyTEM!<br>
+    Un espacio para conectar, compartir y colaborar dentro de nuestra comunidad estudiantil. 
+    Aquí podrás informarte, participar y expresar tus ideas con respeto y creatividad.<br>
+    ¡Gracias por ser parte del CECyTEM!
+    </h4>
+    <!-- Mensaje de bienvenida con saltos de línea <br> -->
+
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <!-- Etiqueta para el campo de email -->
+        <input type="email" class="form-control" id="email" name="email" required />
+        <!-- Campo de tipo email obligatorio -->
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <!-- Etiqueta para la contraseña -->
+        <input type="password" class="form-control" id="password" name="password" required />
+        <!-- Campo de tipo password obligatorio para ocultar texto -->
+    </div>
+
+    <button type="submit" class="btn btn-warning text-dark fw-bold">Entrar</button>
+    <!-- Botón para enviar el formulario con estilos Bootstrap -->
+</form>
+
+<p class="mt-3">
+    ¿No tienes cuenta? 
+    <a href="{{ url_for('register') }}">Registrarse</a>
+</p>
+<!-- Enlace para ir a la página de registro -->
+
+{% endblock %}
+<!-- Fin del bloque de contenido -->
+
+</body>
+</html>

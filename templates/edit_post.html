@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- templates/edit_post.html -->
+
+{% extends 'base.html' %}
+<!-- Hereda base.html para mantener la estructura, estilos y navbar -->
+
+{% block title %}Editar publicación{% endblock %}
+<!-- Define el título que aparecerá en la pestaña del navegador -->
+
+{% block content %}
+<!-- Inicio del bloque de contenido principal -->
+
+<h2 class="mb-3">Editar publicación</h2>
+<!-- Título de la sección con margen inferior -->
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+<!-- Formulario para editar la publicación:
+     - method="POST": envía los datos al servidor
+     - enctype="multipart/form-data": permite subir archivos
+     - novalidate: evita que el navegador haga validaciones automáticas -->
+
+    <div class="mb-3">
+        <label for="content" class="form-label">Contenido</label>
+        <!-- Etiqueta para el área de texto -->
+        <textarea class="form-control" id="content" name="content" rows="4">{{ post.content }}</textarea>
+        <!-- Campo de texto prellenado con el contenido actual de la publicación -->
+    </div>
+
+    <div class="mb-3">
+        <label for="media" class="form-label">Subir imagen, video o audio (opcional para reemplazar)</label>
+        <!-- Etiqueta para subir un archivo multimedia opcional -->
+        <input class="form-control" type="file" id="media" name="media" accept="image/*,video/mp4,audio/*" />
+        <!-- Input de tipo file que acepta imágenes, videos mp4 o audios -->
+    </div>
+
+    {% if post.media_url %}
+    <!-- Si la publicación tiene un archivo multimedia, mostrarlo -->
+    <div class="mb-3">
+        <label>Archivo actual:</label><br/>
+        {% if post.media_type == 'image' %}
+            <img src="{{ post.media_url }}" alt="Media" style="max-width: 300px;">
+            <!-- Muestra imagen actual -->
+        {% elif post.media_type == 'video' %}
+            <video controls width="300">
+                <source src="{{ post.media_url }}" type="video/mp4">
+            </video>
+            <!-- Muestra video actual con controles -->
+        {% elif post.media_type == 'audio' %}
+            <audio controls>
+                <source src="{{ post.media_url }}" type="audio/mpeg">
+            </audio>
+            <!-- Muestra audio actual con controles -->
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <!-- Botón para enviar los cambios al servidor -->
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+    <!-- Botón para cancelar y volver al inicio -->
+</form>
+
+{% endblock %}
+<!-- Fin del bloque de contenido -->
+
+</body>
+</html>
